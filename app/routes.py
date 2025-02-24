@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from app.database import get_db
-
+from passlib.hash import pbkdf2_sha256
 app = Flask(__name__)  
 
 
@@ -46,3 +46,13 @@ def delete_user(id):
     if result.deleted_count > 0:
         return jsonify({'message': 'User deleted'}), 200
     return jsonify({'message': 'User not found'}), 404
+def create_user():
+    try:
+        db = get_db()
+        data = request.get_json()
+        user_id = str(db.users.count_documents({}) + 1)
+        data['id'] = user_id
+        db.users.insert_one(data)
+        return jsonify({'id': user_id, 'message': 'User created'}), 201
+    except Exception as e:
+        return jsonify({'message': f'Error: {str(e)}'}), 500
